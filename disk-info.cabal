@@ -15,7 +15,7 @@ build-type:          Simple
 -- extra-source-files:  
 cabal-version:       >=1.10
 
-executable update-info
+executable di-compare-directories
   main-is:             update-info.hs
   -- other-modules:       
   -- other-extensions:    
