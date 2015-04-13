@@ -1,6 +1,7 @@
 module Main where
 
 import           Control.Applicative
+import           Control.Monad
 import qualified Data.ByteString.Char8            as BC
 import qualified Data.ByteString.Lazy             as L
 -- import qualified Data.Attoparsec.ByteString.Char8 as P
@@ -27,10 +28,14 @@ type ByteString = BC.ByteString
 
 main :: IO ()
 main = do
-  mapM_ processDirectory =<< getArgs
+  cwd <- getCurrentDirectory
+  let fullPath cwd path@('/':_) = path
+      fullPath cwd path         = cwd </> path
+  mapM_ (processDirectory . fullPath cwd) =<< getArgs
 
 processDirectory :: FilePath -> IO ()
 processDirectory dName = do
+  checkDirectory dName
   setCurrentDirectory dName
   Just db1 <- fmap (Map.fromList . map (\ e -> (e_path e, e)) . parseState)
            <$> runCommandCleanly "find" [ ".", "-type", "f", "-printf", "%Ts %s %i - %p\n" ] BC.empty
@@ -53,12 +58,25 @@ combine e1@(Entry ts1 sz1 nd1 cs1 fn1) e2@(Entry ts2 sz2 nd2 cs2 fn2) =
 
 installNewIndex :: IO ()
 installNewIndex = do
-  let isPreviousIndex name = takeBaseName name == "index" && (all isDigit . takeExtension $ name)
+  let isNumericExtension :: FilePath -> Bool
+      isNumericExtension ('.':(_:rest)) = all isDigit rest
+      isNumericExtension _ = False
+      isPreviousIndex name = takeBaseName name == "index" && (isNumericExtension . takeExtension $ name)
       previousIndexToNumber :: FilePath -> Int
       previousIndexToNumber = read . tail . takeExtension
   fs <- filter isPreviousIndex <$> getDirectoryContents "./Info"
-  let nxt = (+ 1) . maximum . map previousIndexToNumber $ fs
+  let nxt = (+ 1) . maximum . (0:) . map previousIndexToNumber $ fs
       oldName = "index" <.> show nxt
   renameFile "Info/index" ("Info" </> oldName)
   renameFile "Info/index.new" "Info/index"
   
+checkDirectory :: FilePath -> IO ()
+checkDirectory dName = do
+  let infoDir = dName </> "Info"
+  ok <- doesDirectoryExist infoDir
+  if ok
+    then do
+      let indexFile = infoDir </> "index"
+      ok' <- doesFileExist  indexFile
+      when (not ok') $ writeFile indexFile ""
+    else putStrLn $ dName ++ " has no Info directory"
