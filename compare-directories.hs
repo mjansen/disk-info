@@ -13,7 +13,7 @@ import qualified Data.Set         as Set
 import qualified Data.Traversable as T
 import qualified Data.Foldable    as F
 
--- import           Text.Printf (printf)
+import           Text.Printf (printf)
 
 import           System.Process.Exts
 import           System.Environment
@@ -38,9 +38,15 @@ compareContainers c1 c2 =
       sz1 = Set.size s1
       sz2 = Set.size s2
       szc = Set.size common
+      sA' = Set.map snd $ s1 `Set.difference` common
+      sB' = Set.map snd $ s2 `Set.difference` common
+      sC' = sA' `Set.intersection` sB'
   in do
-    print (szc, sz1 - szc)
-    print (szc, sz2 - szc)
+    printf "     common: %9d\n" szc
+    printf "unique to A: %9d\n" (sz1 - szc)
+    printf "unique to B: %9d\n" (sz2 - szc)
+    printf "different content, same name in A, B: %d\n" (Set.size sC')
+    mapM_ print . Set.toList $ sC'
     -- return (s1, s2)
 
 compareDirectories :: FilePath -> FilePath -> IO ()
