@@ -51,8 +51,8 @@ compareContainers c1 c2 =
 
 compareDirectories :: FilePath -> FilePath -> IO ()
 compareDirectories indexFile1 indexFile2 = do
-  rs1 <- readState indexFile1
-  rs2 <- readState indexFile2
+  rs1 <- readState' indexFile1
+  rs2 <- readState' indexFile2
   _ <- compareContainers rs1 rs2
   return ()
   
