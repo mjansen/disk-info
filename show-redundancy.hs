@@ -9,6 +9,7 @@ import qualified Data.ByteString.Lazy             as L
 
 import           Data.Char
 import           Data.Int
+import           Data.Maybe
 import           Data.Monoid
 import qualified Data.Map.Strict  as Map
 -- import qualified Data.Set         as Set
@@ -35,12 +36,14 @@ main = do
       fullPath cwd path         = cwd </> path
   [path] <- map (fullPath cwd) <$> getArgs
   -- use the free monoid to accumulate entries with the same checksum:
-  db <- Map.fromListWith mappend . map (\ e -> (e_checkSum e, [e])) <$> readState (path </> "Info/index")
+  db <- Map.fromListWith mappend . map (\ e -> (e_checkSum e, [e])) <$> readState' path
   let duplication@(Duplication t u)  = Map.foldr Main.combine mempty db
   print duplication
   when (t > 0) $ do
     printf "total size = %d, wasted = %d (%d %%)\n" t (t - u) (100*(t - u) `quot` t)
 
+-- like readState, but the supplied path does not have to contain an Info structure:
+    
 data Duplication = Duplication Int64 Int64
   deriving Show
 

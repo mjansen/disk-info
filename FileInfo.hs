@@ -6,6 +6,7 @@ import qualified Data.ByteString.Lazy             as L
 import qualified Data.Attoparsec.ByteString.Char8 as P
 import qualified Data.ByteString.Builder          as B
 
+import           Data.Maybe
 import           Data.Monoid
 import qualified Data.Map.Strict  as Map
 -- import qualified Data.Set         as Set
@@ -14,6 +15,8 @@ import qualified Data.Traversable as T
 -- import           Text.Printf (printf)
 
 import           System.Process.Exts
+import           System.Directory
+import           System.FilePath
 
 -- import FileEntry
 
@@ -42,6 +45,20 @@ parseState content =
     Left msg -> error "could not parse file"
     Right rs -> rs
   
+readStateFile :: FilePath -> IO (Maybe [Entry])
+readStateFile path = do
+  ok <- doesFileExist path
+  if ok
+    then Just <$> readState path
+    else return Nothing
+
+readState' :: FilePath -> IO [Entry]
+readState' path = do
+  rs <- take 1 . catMaybes <$> mapM readStateFile [ path, path </> "index", path </> "Info/index" ]
+  case rs of
+    []     -> return []
+    (rs:_) -> return rs
+
 ------------------------------------------------------------------------
 
 parseEntry :: P.Parser Entry
