@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module FileInfo where
 
 import           Control.Applicative
@@ -11,12 +13,15 @@ import           Data.Monoid
 import qualified Data.Map.Strict  as Map
 -- import qualified Data.Set         as Set
 import qualified Data.Traversable as T
+import           Data.Serialize
 
 -- import           Text.Printf (printf)
 
 import           System.Process.Exts
 import           System.Directory
 import           System.FilePath
+
+import           GHC.Generics
 
 -- import FileEntry
 
@@ -28,7 +33,9 @@ data Entry = Entry
   , e_inode     :: {-# UNPACK #-} !Int
   , e_checkSum  ::                !(Maybe ByteString)
   , e_path      :: {-# UNPACK #-} !ByteString
-  } deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show, Generic)
+
+instance Serialize Entry;
 
 needsChecksum :: Entry -> Bool
 needsChecksum (Entry _ _ _ Nothing _) = True
@@ -37,7 +44,11 @@ needsChecksum _                       = False
 ------------------------------------------------------------------------
 
 readState :: FilePath -> IO [Entry]
-readState = (parseState <$>) . BC.readFile
+readState fName = do
+  ok <- doesFileExist (fName ++ "-bin")
+  if ok
+    then readStateB (fName ++ "-bin")
+    else parseState <$> BC.readFile fName
 
 parseState :: ByteString -> [Entry]
 parseState content =
@@ -58,6 +69,13 @@ readState' path = do
   case rs of
     []     -> return []
     (rs:_) -> return rs
+
+readStateB :: FilePath -> IO [Entry]
+readStateB fName = do
+  result <- decode <$> BC.readFile fName
+  case result of
+   Left msg -> error msg
+   Right rs -> return rs
 
 ------------------------------------------------------------------------
 

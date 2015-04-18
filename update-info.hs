@@ -3,6 +3,7 @@ module Main where
 import           Control.Applicative
 import           Control.Monad
 import qualified Data.ByteString.Char8            as BC
+import qualified Data.ByteString                  as B
 import qualified Data.ByteString.Lazy             as L
 -- import qualified Data.Attoparsec.ByteString.Char8 as P
 -- import qualified Data.ByteString.Builder          as B
@@ -12,6 +13,7 @@ import           Data.Monoid
 import qualified Data.Map.Strict  as Map
 -- import qualified Data.Set         as Set
 import qualified Data.Traversable as T
+import           Data.Serialize
 
 -- import           Text.Printf (printf)
 
@@ -42,7 +44,9 @@ processDirectory dName = do
   db2 <- Map.fromList . map (\ e -> (e_path e, e)) <$> readState "./Info/index"
   let db3 = Map.unionWith Main.combine db1 db2
   db4 <- T.mapM fixChecksum db3
-  L.writeFile "./Info/index.new" . L.concat . map (unparseEntry . snd) . Map.toList $ db4
+  let rs = Map.toList db4
+  L.writeFile "./Info/index.new" . L.concat . map (unparseEntry . snd) $ rs
+  B.writeFile "./Info/index-bin.new" . encode $ rs
   installNewIndex
 
 combine :: Entry -> Entry -> Entry
@@ -68,7 +72,8 @@ installNewIndex = do
   let nxt = (+ 1) . maximum . (0:) . map previousIndexToNumber $ fs
       oldName = "index" <.> show nxt
   renameFile "Info/index" ("Info" </> oldName)
-  renameFile "Info/index.new" "Info/index"
+  renameFile "Info/index.new"     "Info/index"
+  renameFile "Info/index-bin.new" "Info/index-bin"
   
 checkDirectory :: FilePath -> IO ()
 checkDirectory dName = do

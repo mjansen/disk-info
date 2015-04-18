@@ -19,7 +19,7 @@ executable update-info
   main-is:             update-info.hs
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base, containers, bytestring, attoparsec, process-exts, filepath, directory
+  build-depends:       base, containers, bytestring, attoparsec, process-exts, filepath, directory, cereal
   -- hs-source-dirs:      
   default-language:    Haskell2010
   ghc-options:         -O2 -threaded -rtsopts
@@ -28,7 +28,7 @@ executable compare-directories
   main-is:             compare-directories.hs
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base, containers, bytestring, attoparsec, process-exts, filepath, directory
+  build-depends:       base, containers, bytestring, attoparsec, process-exts, filepath, directory, cereal
   -- hs-source-dirs:      
   default-language:    Haskell2010
   ghc-options:         -O2 -threaded -rtsopts
@@ -37,7 +37,7 @@ executable show-redundancy
   main-is:             show-redundancy.hs
   -- other-modules:       
   -- other-extensions:    
-  build-depends:       base, containers, bytestring, attoparsec, process-exts, filepath, directory
+  build-depends:       base, containers, bytestring, attoparsec, process-exts, filepath, directory, cereal
   -- hs-source-dirs:      
   default-language:    Haskell2010
   ghc-options:         -O2 -threaded -rtsopts
