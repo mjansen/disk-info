@@ -46,7 +46,7 @@ processDirectory dName = do
   db4 <- T.mapM fixChecksum db3
   let rs = Map.toList db4
   L.writeFile "./Info/index.new" . L.concat . map (unparseEntry . snd) $ rs
-  B.writeFile "./Info/index-bin.new" . encode $ rs
+  B.writeFile "./Info/index-bin.new" . encode . map snd $ rs
   installNewIndex
 
 combine :: Entry -> Entry -> Entry
